@@ -5,5 +5,5 @@ export const Title = styled.h3`
     font-size: 1rem;
     margin-left: 1rem;
     margin-bottom: 1rem;
-    color: #ffaded;
+    color: #fff;
 `
