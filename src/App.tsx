@@ -7,6 +7,7 @@ import { Container } from "./components/Container/style"
 import { ContainerDirector } from "./components/ContainerDirector/style";
 import { Description } from "./components/Description/style";
 import { Title } from "./components/Title/style";
+import { useMovies } from "./hooks/useMovies";
 interface Data{
   id: string;
 
@@ -23,17 +24,22 @@ interface Data{
 function App() {
   const [data, setData] = useState<Data[]>([]);
   const [pageNumber, setPageNumber] = useState(0);
-
+  const [messageError, setMessageError] = useState(false);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     async function fetchData(){
-      const response = await fetch(`http://localhost:5000/movies`);
-      const movies = await response.json();
-      setData(movies.items)
-      
+      try{
+        const response = await fetch(`http://localhost:5000/movies`);
+        const movies = await response.json();
+        setData(movies.items)
+      }catch(error){
+        setMessageError(true);
+      }
     }
     fetchData();
   },[])
 
+  
   const moviesPerPage = 10;
   const pagesVisited = pageNumber * moviesPerPage;
   const displayMovies = data.slice(pagesVisited, pagesVisited + moviesPerPage).map((item) => (
@@ -53,9 +59,35 @@ function App() {
   const changePage = ({selected}: any) => {
     setPageNumber(selected)
   }
+  async function handlePopulate(){
+    try{
+      setLoading(true)
+      const response = await fetch(`http://localhost:5000/movies/data`);
+      const movies = await response.json();
+      if(movies.length >= 22){
+        alert('Poulate movie OK')
+        setLoading(false)
+      }
+      
+    }catch(error){
+      setLoading(false);
+    }finally{
+      setLoading(false)
+      return document.location.reload()
+    }
+  }
+  console.log(loading)
   return (
       <Container>
-
+        {loading && (
+          <div className="loader"/>
+        
+        )}
+        {!loading && (
+          <button className="button" onClick={handlePopulate} id="button">Populate Movies</button>
+        
+        )}
+        
       <div style={{marginBottom: '2rem', padding: '1rem 0'}}>
         <ReactPaginate 
           previousLabel={"🡰"}
@@ -72,8 +104,13 @@ function App() {
         <div style={{display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '1.5rem'}}>
           {displayMovies}
         </div>
-       
+       {messageError && (
+        <div>
+          <h1>Api off <a href="/">Reload</a></h1>
+        </div>
+       )}
       </Container>
+      
     
   );
 }
